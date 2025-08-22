@@ -201,21 +201,39 @@ class WebhookController extends FrontEndController
         $sigHeader = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? null;
         $endpointSecret = null;
 
-        // Try to get currency-based webhook signing secret first
-        $endpointSecret = StripePlugin::$app->settings->getWebhookSigningSecretByCurrency();
+        // Log webhook attempt for debugging
+        Craft::info('Webhook validation attempt - Test Mode: ' . ($settings->testMode ? 'Yes' : 'No'), __METHOD__);
+
+        // Try to detect currency from webhook data if available
+        $detectedCurrency = $this->detectCurrencyFromWebhook($input);
+        if ($detectedCurrency) {
+            Craft::info('Detected currency from webhook: ' . $detectedCurrency, __METHOD__);
+            $endpointSecret = StripePlugin::$app->settings->getWebhookSigningSecretByCurrency($detectedCurrency);
+        }
+
+        // If no currency detected or no currency-specific secret, try the current session currency
+        if (empty($endpointSecret)) {
+            $endpointSecret = StripePlugin::$app->settings->getWebhookSigningSecretByCurrency();
+            Craft::info('Using session-based webhook secret for currency: ' . StripePlugin::$app->settings->getCurrentCurrency(), __METHOD__);
+        }
+
+        Craft::info('Currency-based webhook secret found: ' . (!empty($endpointSecret) ? 'Yes' : 'No'), __METHOD__);
 
         // Fallback to original method if no currency-based secret is found
         if (empty($endpointSecret)) {
             if ($settings->testMode && !empty($settings->testWebhookSigningSecret)) {
                 $endpointSecret = $settings->testWebhookSigningSecret;
+                Craft::info('Using fallback test webhook secret', __METHOD__);
             }
 
             if (!$settings->testMode && !empty($settings->liveWebhookSigningSecret)) {
                 $endpointSecret = $settings->liveWebhookSigningSecret;
+                Craft::info('Using fallback live webhook secret', __METHOD__);
             }
         }
 
         if (empty($endpointSecret)) {
+            Craft::warning('No webhook signing secret found - skipping validation', __METHOD__);
             return true;
         }
 
@@ -223,15 +241,65 @@ class WebhookController extends FrontEndController
             $event = Webhook::constructEvent(
                 $input, $sigHeader, $endpointSecret
             );
-
+            Craft::info('Webhook signature validation successful', __METHOD__);
             return true;
         } catch(\UnexpectedValueException $e) {
-            Craft::error('Invalid payload', __METHOD__);
+            Craft::error('Invalid webhook payload: ' . $e->getMessage(), __METHOD__);
         } catch(\Stripe\Exception\SignatureVerificationException $e) {
-            Craft::error('Invalid signature', __METHOD__);
+            Craft::error('Invalid webhook signature: ' . $e->getMessage(), __METHOD__);
+
+            // Log additional debugging info
+            Craft::error('Webhook signature header: ' . ($sigHeader ?? 'null'), __METHOD__);
+            Craft::error('Webhook endpoint secret length: ' . strlen($endpointSecret), __METHOD__);
+            Craft::error('Webhook input length: ' . strlen($input), __METHOD__);
         }
 
         return false;
+    }
+
+    /**
+     * Try to detect currency from webhook data
+     * @param string $input
+     * @return string|null
+     */
+    private function detectCurrencyFromWebhook($input)
+    {
+        try {
+            $eventData = json_decode($input, true);
+
+            if (!$eventData || !isset($eventData['data']['object'])) {
+                return null;
+            }
+
+            $object = $eventData['data']['object'];
+
+            // Check for currency in different webhook types
+            if (isset($object['currency'])) {
+                return strtolower($object['currency']);
+            }
+
+            // Check for currency in payment intent
+            if (isset($object['payment_intent'])) {
+                // We'd need to retrieve the payment intent to get currency
+                // For now, return null to avoid additional API calls
+                return null;
+            }
+
+            // Check for currency in checkout session
+            if (isset($object['currency'])) {
+                return strtolower($object['currency']);
+            }
+
+            // Check for currency in subscription
+            if (isset($object['currency'])) {
+                return strtolower($object['currency']);
+            }
+
+        } catch (\Exception $e) {
+            Craft::error('Error detecting currency from webhook: ' . $e->getMessage(), __METHOD__);
+        }
+
+        return null;
     }
 
     /**
