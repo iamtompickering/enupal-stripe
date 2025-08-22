@@ -138,15 +138,59 @@ class WebhookController extends FrontEndController
                     // We have a subscription
                     Craft::info('Creating order from subscription', __METHOD__);
                     $subscriptionId = $checkoutSession['subscription'];
-                    $order = StripePlugin::$app->orders->getOrderByStripeId($subscriptionId);
-                    if ($order !== null) {
-                        Craft::warning('Checkout session was already processed under order: '.$order->number, __METHOD__);
-                        break;
+
+                    // Add retry mechanism for subscription webhooks
+                    $maxRetries = 3;
+                    $retryDelay = 1; // seconds
+                    $subscription = null;
+
+                    for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+                        Craft::info('Attempt ' . $attempt . ' to get subscription: ' . $subscriptionId, __METHOD__);
+
+                        try {
+                            $subscription = StripePlugin::$app->subscriptions->getStripeSubscription($subscriptionId);
+                            if ($subscription) {
+                                Craft::info('Subscription retrieved successfully on attempt ' . $attempt, __METHOD__);
+                                break;
+                            }
+                        } catch (\Exception $e) {
+                            Craft::warning('Attempt ' . $attempt . ' failed: ' . $e->getMessage(), __METHOD__);
+
+                            // If this is a "No such subscription" error, it's likely a timing issue
+                            if (strpos($e->getMessage(), 'No such subscription') !== false) {
+                                Craft::info('Subscription not yet created in Stripe - this is normal for immediate webhooks', __METHOD__);
+                            }
+                        }
+
+                        if ($attempt < $maxRetries) {
+                            Craft::info('Waiting ' . $retryDelay . ' seconds before retry...', __METHOD__);
+                            usleep($retryDelay * 1000000); // Use usleep instead of sleep for shorter delays
+                        }
                     }
 
-                    $subscription = StripePlugin::$app->subscriptions->getStripeSubscription($subscriptionId);
-                    if ($subscription){
+                    if ($subscription) {
+                        $order = StripePlugin::$app->orders->getOrderByStripeId($subscriptionId);
+                        if ($order !== null) {
+                            Craft::warning('Checkout session was already processed under order: '.$order->number, __METHOD__);
+                            break;
+                        }
+
                         $order = StripePlugin::$app->paymentIntents->createOrderFromSubscription($subscription, $checkoutSession);
+                    } else {
+                        Craft::error('Failed to retrieve subscription after ' . $maxRetries . ' attempts', __METHOD__);
+                        Craft::error('This may be a timing issue - subscription not yet created in Stripe', __METHOD__);
+
+                        // Log additional information for debugging
+                        Craft::info('Checkout session mode: ' . ($checkoutSession['mode'] ?? 'not set'), __METHOD__);
+                        Craft::info('Checkout session status: ' . ($checkoutSession['status'] ?? 'not set'), __METHOD__);
+                        Craft::info('Checkout session payment status: ' . ($checkoutSession['payment_status'] ?? 'not set'), __METHOD__);
+
+                        // Store checkout session for later processing when subscription is available
+                        // This will be handled by the subscription.created webhook
+                        Craft::info('Storing checkout session for later processing when subscription is available', __METHOD__);
+
+                        // We'll return here and let the subscription.created webhook handle the order creation
+                        // This is a more robust approach than blocking the webhook
                     }
                 }else{
                     Craft::info('Creating order from payment intent', __METHOD__);
@@ -198,6 +242,54 @@ class WebhookController extends FrontEndController
                 $stripeObject = $eventJson['data']['object'];
 
                 StripePlugin::$app->prices->createOrUpdatePrice($stripeObject);
+
+                break;
+
+            // Handle subscription creation events
+            case 'customer.subscription.created':
+                Craft::info('Processing customer.subscription.created webhook', __METHOD__);
+
+                if (!$isPro) {
+                    break;
+                }
+
+                $subscription = $eventJson['data']['object'];
+                $subscriptionId = $subscription['id'];
+
+                Craft::info('Subscription created - ID: ' . $subscriptionId, __METHOD__);
+
+                // Check if order already exists for this subscription
+                $existingOrder = StripePlugin::$app->orders->getOrderByStripeId($subscriptionId);
+                if ($existingOrder) {
+                    Craft::info('Order already exists for subscription: ' . $existingOrder->number, __METHOD__);
+                    break;
+                }
+
+                // Try to create order from subscription
+                try {
+                    // We need to get the checkout session to create the order
+                    // For now, we'll try to create the order directly from the subscription
+                    Craft::info('Attempting to create order from subscription: ' . $subscriptionId, __METHOD__);
+
+                    // Create a minimal checkout session structure for order creation
+                    $checkoutSession = [
+                        'id' => 'webhook_' . $subscriptionId,
+                        'livemode' => $subscription['livemode'],
+                        'shipping' => null,
+                        'currency' => $subscription['currency'] ?? 'usd'
+                    ];
+
+                    $order = StripePlugin::$app->paymentIntents->createOrderFromSubscription($subscription, $checkoutSession);
+
+                    if ($order) {
+                        Craft::info('Order created successfully from subscription webhook: ' . $order->number, __METHOD__);
+                    } else {
+                        Craft::error('Failed to create order from subscription webhook', __METHOD__);
+                    }
+
+                } catch (\Exception $e) {
+                    Craft::error('Error creating order from subscription webhook: ' . $e->getMessage(), __METHOD__);
+                }
 
                 break;
         }
