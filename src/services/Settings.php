@@ -70,6 +70,25 @@ class Settings extends Component
         $settings->useSca = $configSettings['useSca'] ?? $settings->useSca;
         $settings->capture = $configSettings['capture'] ?? $settings->capture;
 
+        // Multi-currency API keys config overrides
+        $settings->ukLivePublishableKey = $configSettings['ukLivePublishableKey'] ?? $settings->ukLivePublishableKey;
+        $settings->ukLiveSecretKey = $configSettings['ukLiveSecretKey'] ?? $settings->ukLiveSecretKey;
+        $settings->ukLiveClientId = $configSettings['ukLiveClientId'] ?? $settings->ukLiveClientId;
+        $settings->ukLiveWebhookSigningSecret = $configSettings['ukLiveWebhookSigningSecret'] ?? $settings->ukLiveWebhookSigningSecret;
+        $settings->ukTestSecretKey = $configSettings['ukTestSecretKey'] ?? $settings->ukTestSecretKey;
+        $settings->ukTestPublishableKey = $configSettings['ukTestPublishableKey'] ?? $settings->ukTestPublishableKey;
+        $settings->ukTestClientId = $configSettings['ukTestClientId'] ?? $settings->ukTestClientId;
+        $settings->ukTestWebhookSigningSecret = $configSettings['ukTestWebhookSigningSecret'] ?? $settings->ukTestWebhookSigningSecret;
+
+        $settings->usLivePublishableKey = $configSettings['usLivePublishableKey'] ?? $settings->usLivePublishableKey;
+        $settings->usLiveSecretKey = $configSettings['usLiveSecretKey'] ?? $settings->usLiveSecretKey;
+        $settings->usLiveClientId = $configSettings['usLiveClientId'] ?? $settings->usLiveClientId;
+        $settings->usLiveWebhookSigningSecret = $configSettings['usLiveWebhookSigningSecret'] ?? $settings->usLiveWebhookSigningSecret;
+        $settings->usTestSecretKey = $configSettings['usTestSecretKey'] ?? $settings->usTestSecretKey;
+        $settings->usTestPublishableKey = $configSettings['usTestPublishableKey'] ?? $settings->usTestPublishableKey;
+        $settings->usTestClientId = $configSettings['usTestClientId'] ?? $settings->usTestClientId;
+        $settings->usTestWebhookSigningSecret = $configSettings['usTestWebhookSigningSecret'] ?? $settings->usTestWebhookSigningSecret;
+
         return $settings;
     }
 
@@ -95,12 +114,72 @@ class Settings extends Component
     /**
      * @return string
      */
+    public function getPublishableKeyByCurrency($currency = null)
+    {
+        $settings = $this->getSettings();
+
+        if (!$currency) {
+            $currency = $this->getCurrentCurrency();
+        }
+
+        $currency = strtolower($currency);
+
+        if ($settings->testMode) {
+            if ($currency === 'gbp' && $settings->ukTestPublishableKey) {
+                return $settings->ukTestPublishableKey;
+            } elseif ($currency === 'usd' && $settings->usTestPublishableKey) {
+                return $settings->usTestPublishableKey;
+            }
+            return $settings->testPublishableKey;
+        } else {
+            if ($currency === 'gbp' && $settings->ukLivePublishableKey) {
+                return $settings->ukLivePublishableKey;
+            } elseif ($currency === 'usd' && $settings->usLivePublishableKey) {
+                return $settings->usLivePublishableKey;
+            }
+            return $settings->livePublishableKey;
+        }
+    }
+
+    /**
+     * @return string
+     */
     public function getClientId()
     {
         $settings = $this->getSettings();
         $clientId = $settings->testMode ? $settings->testClientId : $settings->liveClientId;
 
         return $clientId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getClientIdByCurrency($currency = null)
+    {
+        $settings = $this->getSettings();
+
+        if (!$currency) {
+            $currency = $this->getCurrentCurrency();
+        }
+
+        $currency = strtolower($currency);
+
+        if ($settings->testMode) {
+            if ($currency === 'gbp' && $settings->ukTestClientId) {
+                return $settings->ukTestClientId;
+            } elseif ($currency === 'usd' && $settings->usTestClientId) {
+                return $settings->usTestClientId;
+            }
+            return $settings->testClientId;
+        } else {
+            if ($currency === 'gbp' && $settings->ukLiveClientId) {
+                return $settings->ukLiveClientId;
+            } elseif ($currency === 'usd' && $settings->usLiveClientId) {
+                return $settings->usLiveClientId;
+            }
+            return $settings->liveClientId;
+        }
     }
 
     /**
@@ -116,11 +195,83 @@ class Settings extends Component
     }
 
     /**
+     * @return string
+     */
+    public function getPrivateKeyByCurrency($currency = null)
+    {
+        $settings = $this->getSettings();
+
+        if (!$currency) {
+            $currency = $this->getCurrentCurrency();
+        }
+
+        $currency = strtolower($currency);
+
+        if ($settings->testMode) {
+            if ($currency === 'gbp' && $settings->ukTestSecretKey) {
+                return $settings->ukTestSecretKey;
+            } elseif ($currency === 'usd' && $settings->usTestSecretKey) {
+                return $settings->usTestSecretKey;
+            }
+            return $settings->testSecretKey;
+        } else {
+            if ($currency === 'gbp' && $settings->ukLiveSecretKey) {
+                return $settings->ukLiveSecretKey;
+            } elseif ($currency === 'usd' && $settings->usLiveSecretKey) {
+                return $settings->usLiveSecretKey;
+            }
+            return $settings->liveSecretKey;
+        }
+    }
+
+    /**
+     * Get the current currency from the session
+     * @return string
+     */
+    public function getCurrentCurrency()
+    {
+        $session = Craft::$app->getSession();
+        $currency = $session->get('currency', 'usd');
+
+        return strtolower($currency);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getWebhookSigningSecretByCurrency($currency = null)
+    {
+        $settings = $this->getSettings();
+
+        if (!$currency) {
+            $currency = $this->getCurrentCurrency();
+        }
+
+        $currency = strtolower($currency);
+
+        if ($settings->testMode) {
+            if ($currency === 'gbp' && $settings->ukTestWebhookSigningSecret) {
+                return $settings->ukTestWebhookSigningSecret;
+            } elseif ($currency === 'usd' && $settings->usTestWebhookSigningSecret) {
+                return $settings->usTestWebhookSigningSecret;
+            }
+            return $settings->testWebhookSigningSecret;
+        } else {
+            if ($currency === 'gbp' && $settings->ukLiveWebhookSigningSecret) {
+                return $settings->ukLiveWebhookSigningSecret;
+            } elseif ($currency === 'usd' && $settings->usLiveWebhookSigningSecret) {
+                return $settings->usLiveWebhookSigningSecret;
+            }
+            return $settings->liveWebhookSigningSecret;
+        }
+    }
+
+    /**
      * @throws \Exception
      */
     public function initializeStripe()
     {
-        $privateKey = $this->getPrivateKey();
+        $privateKey = $this->getPrivateKeyByCurrency();
 
         if ($privateKey) {
             Stripe::setAppInfo('Craft CMS - '.StripePlugin::getInstance()->name, StripePlugin::getInstance()->version, StripePlugin::getInstance()->documentationUrl, self::STRIPE_PARTNER_ID);

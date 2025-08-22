@@ -242,7 +242,7 @@ class PaymentForm extends Element
      */
     public function getPublishableKey()
     {
-        $this->publishableKey = StripePlugin::$app->settings->getPublishableKey();
+        $this->publishableKey = StripePlugin::$app->settings->getPublishableKeyByCurrency();
 
         return $this->publishableKey;
     }

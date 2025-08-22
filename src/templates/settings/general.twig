@@ -197,6 +197,334 @@
                 {% endif %}
             </div>
 
+            <hr>
+            <h3>UK API Keys (GBP)</h3>
+            <p>Configure separate API keys for UK/GBP transactions. These will be used when the session currency is set to 'gbp'.</p>
+
+            <div id="ukTestKeys" class="{% if not settings.testMode %} hidden {% endif %}">
+                {% if not configSettings.ukTestPublishableKey is defined %}
+                    {{ forms.textField({
+                        label: "UK Test Publishable Key"|t('enupal-stripe'),
+                        instructions: "This key starts with <strong>pk_test</strong> for UK/GBP transactions"|t('enupal-stripe'),
+                        id: 'ukTestPublishableKey',
+                        name: 'ukTestPublishableKey',
+                        value: settings.ukTestPublishableKey,
+                        autofocus: true,
+                        errors: settings.getErrors('ukTestPublishableKey')
+                    }) }}
+                {% else %}
+                    <div class="pane">
+                        <p>
+                            <span class="checkmark-icon"></span>
+                            <b>UK Test Publishable Key</b> was successfully loaded from config file
+                        </p>
+                    </div>
+                {% endif %}
+
+                {% if not configSettings.ukTestPublishableKey is defined %}
+                    {{ forms.passwordField({
+                        label: "UK Test Secret Key"|t('enupal-stripe'),
+                        instructions: "This key starts with <strong>sk_test</strong> for UK/GBP transactions"|t('enupal-stripe'),
+                        id: 'ukTestSecretKey',
+                        name: 'ukTestSecretKey',
+                        value: settings.ukTestSecretKey,
+                        autofocus: true,
+                        errors: settings.getErrors('ukTestSecretKey')
+                    }) }}
+                {% else %}
+                    <div class="pane">
+                        <p>
+                            <span class="checkmark-icon"></span>
+                            <b>UK Test Secret Key</b> was successfully loaded from config file
+                        </p>
+                    </div>
+                {% endif %}
+
+                {% if not configSettings.ukTestPublishableKey is defined %}
+                    {{ forms.passwordField({
+                        label: "UK Test Webhook Signing Secret"|t('enupal-stripe'),
+                        instructions: "Webhook signing secret for UK/GBP test transactions"|t('enupal-stripe'),
+                        id: 'ukTestWebhookSigningSecret',
+                        name: 'ukTestWebhookSigningSecret',
+                        value: settings.ukTestWebhookSigningSecret,
+                        autofocus: true,
+                        errors: settings.getErrors('ukTestWebhookSigningSecret')
+                    }) }}
+                {% else %}
+                    <div class="pane">
+                        <p>
+                            <span class="checkmark-icon"></span>
+                            <b>UK Test Webhook Signing Secret</b> was successfully loaded from config file
+                        </p>
+                    </div>
+                {% endif %}
+
+                {% if settings.enableConnect %}
+                    {% if not configSettings.ukTestClientId is defined %}
+                        {{ forms.passwordField({
+                            label: "UK Test Client Id"|t('enupal-stripe'),
+                            instructions: "This key starts with <strong>ca_</strong> for UK/GBP transactions"|t('enupal-stripe'),
+                            id: 'ukTestClientId',
+                            name: 'ukTestClientId',
+                            value: settings.ukTestClientId,
+                            autofocus: true,
+                            errors: settings.getErrors('ukTestClientId')
+                        }) }}
+                    {% else %}
+                        <div class="pane">
+                            <p>
+                                <span class="checkmark-icon"></span>
+                                <b>UK Test Client Id</b> was successfully loaded from config file
+                            </p>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <div id="ukLiveKeys" class="{%  if settings.testMode %} hidden {% endif %}">
+                {% if not configSettings.ukLivePublishableKey is defined %}
+                    {{ forms.textField({
+                        label: "UK Live Publishable Key"|t('enupal-stripe'),
+                        instructions: "This key starts with <strong>pk_live</strong> for UK/GBP transactions"|t('enupal-stripe'),
+                        id: 'ukLivePublishableKey',
+                        name: 'ukLivePublishableKey',
+                        value: settings.ukLivePublishableKey,
+                        autofocus: true,
+                        errors: settings.getErrors('ukLivePublishableKey')
+                    }) }}
+                {% else %}
+                    <div class="pane">
+                        <p>
+                            <span class="checkmark-icon"></span>
+                            <b>UK Live Publishable Key</b> was successfully loaded from config file
+                        </p>
+                    </div>
+                {% endif %}
+
+                {% if not configSettings.ukLiveSecretKey is defined %}
+                    {{ forms.passwordField({
+                        label: "UK Live Secret Key"|t('enupal-stripe'),
+                        instructions: "This key starts with <strong>sk_live</strong> for UK/GBP transactions"|t('enupal-stripe'),
+                        id: 'ukLiveSecretKey',
+                        name: 'ukLiveSecretKey',
+                        value: settings.ukLiveSecretKey,
+                        autofocus: true,
+                        errors: settings.getErrors('ukLiveSecretKey')
+                    }) }}
+                {% else %}
+                    <div class="pane">
+                        <p>
+                            <span class="checkmark-icon"></span>
+                            <b>UK Live Secret Key</b> was successfully loaded from config file
+                        </p>
+                    </div>
+                {% endif %}
+
+                {% if not configSettings.ukLivePublishableKey is defined %}
+                    {{ forms.passwordField({
+                        label: "UK Live Webhook Signing Secret"|t('enupal-stripe'),
+                        instructions: "Webhook signing secret for UK/GBP live transactions"|t('enupal-stripe'),
+                        id: 'ukLiveWebhookSigningSecret',
+                        name: 'ukLiveWebhookSigningSecret',
+                        value: settings.ukLiveWebhookSigningSecret,
+                        autofocus: true,
+                        errors: settings.getErrors('ukLiveWebhookSigningSecret')
+                    }) }}
+                {% else %}
+                    <div class="pane">
+                        <p>
+                            <span class="checkmark-icon"></span>
+                            <b>UK Live Webhook Signing Secret</b> was successfully loaded from config file
+                        </p>
+                    </div>
+                {% endif %}
+
+                {% if settings.enableConnect %}
+                    {% if not configSettings.ukLiveClientId is defined %}
+                        {{ forms.passwordField({
+                            label: "UK Live Client Id"|t('enupal-stripe'),
+                            instructions: "This key starts with <strong>ca_</strong> for UK/GBP transactions"|t('enupal-stripe'),
+                            id: 'ukLiveClientId',
+                            name: 'ukLiveClientId',
+                            value: settings.ukLiveClientId,
+                            autofocus: true,
+                            errors: settings.getErrors('ukLiveClientId')
+                        }) }}
+                    {% else %}
+                        <div class="pane">
+                            <p>
+                                <span class="checkmark-icon"></span>
+                                <b>UK Live Client Id</b> was successfully loaded from config file
+                            </p>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <hr>
+            <h3>US API Keys (USD)</h3>
+            <p>Configure separate API keys for US/USD transactions. These will be used when the session currency is set to 'usd' or when no currency is specified.</p>
+
+            <div id="usTestKeys" class="{% if not settings.testMode %} hidden {% endif %}">
+                {% if not configSettings.usTestPublishableKey is defined %}
+                    {{ forms.textField({
+                        label: "US Test Publishable Key"|t('enupal-stripe'),
+                        instructions: "This key starts with <strong>pk_test</strong> for US/USD transactions"|t('enupal-stripe'),
+                        id: 'usTestPublishableKey',
+                        name: 'usTestPublishableKey',
+                        value: settings.usTestPublishableKey,
+                        autofocus: true,
+                        errors: settings.getErrors('usTestPublishableKey')
+                    }) }}
+                {% else %}
+                    <div class="pane">
+                        <p>
+                            <span class="checkmark-icon"></span>
+                            <b>US Test Publishable Key</b> was successfully loaded from config file
+                        </p>
+                    </div>
+                {% endif %}
+
+                {% if not configSettings.usTestPublishableKey is defined %}
+                    {{ forms.passwordField({
+                        label: "US Test Secret Key"|t('enupal-stripe'),
+                        instructions: "This key starts with <strong>sk_test</strong> for US/USD transactions"|t('enupal-stripe'),
+                        id: 'usTestSecretKey',
+                        name: 'usTestSecretKey',
+                        value: settings.usTestSecretKey,
+                        autofocus: true,
+                        errors: settings.getErrors('usTestSecretKey')
+                    }) }}
+                {% else %}
+                    <div class="pane">
+                        <p>
+                            <span class="checkmark-icon"></span>
+                            <b>US Test Secret Key</b> was successfully loaded from config file
+                        </p>
+                    </div>
+                {% endif %}
+
+                {% if not configSettings.usTestPublishableKey is defined %}
+                    {{ forms.passwordField({
+                        label: "US Test Webhook Signing Secret"|t('enupal-stripe'),
+                        instructions: "Webhook signing secret for US/USD test transactions"|t('enupal-stripe'),
+                        id: 'usTestWebhookSigningSecret',
+                        name: 'usTestWebhookSigningSecret',
+                        value: settings.usTestWebhookSigningSecret,
+                        autofocus: true,
+                        errors: settings.getErrors('usTestWebhookSigningSecret')
+                    }) }}
+                {% else %}
+                    <div class="pane">
+                        <p>
+                            <span class="checkmark-icon"></span>
+                            <b>US Test Webhook Signing Secret</b> was successfully loaded from config file
+                        </p>
+                    </div>
+                {% endif %}
+
+                {% if settings.enableConnect %}
+                    {% if not configSettings.usTestClientId is defined %}
+                        {{ forms.passwordField({
+                            label: "US Test Client Id"|t('enupal-stripe'),
+                            instructions: "This key starts with <strong>ca_</strong> for US/USD transactions"|t('enupal-stripe'),
+                            id: 'usTestClientId',
+                            name: 'usTestClientId',
+                            value: settings.usTestClientId,
+                            autofocus: true,
+                            errors: settings.getErrors('usTestClientId')
+                        }) }}
+                    {% else %}
+                        <div class="pane">
+                            <p>
+                                <span class="checkmark-icon"></span>
+                                <b>US Test Client Id</b> was successfully loaded from config file
+                            </p>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <div id="usLiveKeys" class="{%  if settings.testMode %} hidden {% endif %}">
+                {% if not configSettings.usLivePublishableKey is defined %}
+                    {{ forms.textField({
+                        label: "US Live Publishable Key"|t('enupal-stripe'),
+                        instructions: "This key starts with <strong>pk_live</strong> for US/USD transactions"|t('enupal-stripe'),
+                        id: 'usLivePublishableKey',
+                        name: 'usLivePublishableKey',
+                        value: settings.usLivePublishableKey,
+                        autofocus: true,
+                        errors: settings.getErrors('usLivePublishableKey')
+                    }) }}
+                {% else %}
+                    <div class="pane">
+                        <p>
+                            <span class="checkmark-icon"></span>
+                            <b>US Live Publishable Key</b> was successfully loaded from config file
+                        </p>
+                    </div>
+                {% endif %}
+
+                {% if not configSettings.usLiveSecretKey is defined %}
+                    {{ forms.passwordField({
+                        label: "US Live Secret Key"|t('enupal-stripe'),
+                        instructions: "This key starts with <strong>sk_live</strong> for US/USD transactions"|t('enupal-stripe'),
+                        id: 'usLiveSecretKey',
+                        name: 'usLiveSecretKey',
+                        value: settings.usLiveSecretKey,
+                        autofocus: true,
+                        errors: settings.getErrors('usLiveSecretKey')
+                    }) }}
+                {% else %}
+                    <div class="pane">
+                        <p>
+                            <span class="checkmark-icon"></span>
+                            <b>US Live Secret Key</b> was successfully loaded from config file
+                        </p>
+                    </div>
+                {% endif %}
+
+                {% if not configSettings.usLivePublishableKey is defined %}
+                    {{ forms.passwordField({
+                        label: "US Live Webhook Signing Secret"|t('enupal-stripe'),
+                        instructions: "Webhook hook signing secret for US/USD live transactions"|t('enupal-stripe'),
+                        id: 'usLiveWebhookSigningSecret',
+                        name: 'usLiveWebhookSigningSecret',
+                        value: settings.usLiveWebhookSigningSecret,
+                        autofocus: true,
+                        errors: settings.getErrors('usLiveWebhookSigningSecret')
+                    }) }}
+                {% else %}
+                    <div class="pane">
+                        <p>
+                            <span class="checkmark-icon"></span>
+                            <b>US Live Webhook Signing Secret</b> was successfully loaded from config file
+                        </p>
+                    </div>
+                {% endif %}
+
+                {% if settings.enableConnect %}
+                    {% if not configSettings.usLiveClientId is defined %}
+                        {{ forms.passwordField({
+                            label: "US Live Client Id"|t('enupal-stripe'),
+                            instructions: "This key starts with <strong>ca_</strong> for US/USD transactions"|t('enupal-stripe'),
+                            id: 'usLiveClientId',
+                            name: 'usLiveClientId',
+                            value: settings.usLiveClientId,
+                            autofocus: true,
+                            errors: settings.getErrors('usLiveClientId')
+                        }) }}
+                    {% else %}
+                        <div class="pane">
+                            <p>
+                                <span class="checkmark-icon"></span>
+                                <b>US Live Client Id</b> was successfully loaded from config file
+                            </p>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+
         {% endnamespace %}
 
     </div>

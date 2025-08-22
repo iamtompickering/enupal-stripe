@@ -26,6 +26,26 @@ class Settings extends Model
     public $testMode = 1;
     public $capture = 1;
     public $useSca = 0;
+
+    // Multi-currency API keys
+    public $ukTestPublishableKey;
+    public $ukTestSecretKey;
+    public $ukTestWebhookSigningSecret;
+    public $ukLivePublishableKey;
+    public $ukLiveSecretKey;
+    public $ukLiveWebhookSigningSecret;
+    public $ukTestClientId;
+    public $ukLiveClientId;
+
+    public $usTestPublishableKey;
+    public $usTestSecretKey;
+    public $usTestWebhookSigningSecret;
+    public $usLivePublishableKey;
+    public $usLiveSecretKey;
+    public $usLiveWebhookSigningSecret;
+    public $usTestClientId;
+    public $usLiveClientId;
+
     // Globals
     public $returnUrl;
     public $defaultCurrency = 'USD';
@@ -252,6 +272,57 @@ class Settings extends Model
 
         if (isset($configSettings['useSca'])) {
             $this->useSca = '';
+        }
+
+        // Multi-currency API keys
+        if (isset($configSettings['ukTestPublishableKey'])) {
+            $this->ukTestPublishableKey = '';
+        }
+        if (isset($configSettings['ukTestSecretKey'])) {
+            $this->ukTestSecretKey = '';
+        }
+        if (isset($configSettings['ukTestWebhookSigningSecret'])) {
+            $this->ukTestWebhookSigningSecret = '';
+        }
+        if (isset($configSettings['ukLivePublishableKey'])) {
+            $this->ukLivePublishableKey = '';
+        }
+        if (isset($configSettings['ukLiveSecretKey'])) {
+            $this->ukLiveSecretKey = '';
+        }
+        if (isset($configSettings['ukLiveWebhookSigningSecret'])) {
+            $this->ukLiveWebhookSigningSecret = '';
+        }
+        if (isset($configSettings['ukTestClientId'])) {
+            $this->ukTestClientId = '';
+        }
+        if (isset($configSettings['ukLiveClientId'])) {
+            $this->ukLiveClientId = '';
+        }
+
+        if (isset($configSettings['usTestPublishableKey'])) {
+            $this->usTestPublishableKey = '';
+        }
+        if (isset($configSettings['usTestSecretKey'])) {
+            $this->usTestSecretKey = '';
+        }
+        if (isset($configSettings['usTestWebhookSigningSecret'])) {
+            $this->usTestWebhookSigningSecret = '';
+        }
+        if (isset($configSettings['usLivePublishableKey'])) {
+            $this->usLivePublishableKey = '';
+        }
+        if (isset($configSettings['usLiveSecretKey'])) {
+            $this->usLiveSecretKey = '';
+        }
+        if (isset($configSettings['usLiveWebhookSigningSecret'])) {
+            $this->usLiveWebhookSigningSecret = '';
+        }
+        if (isset($configSettings['usTestClientId'])) {
+            $this->usTestClientId = '';
+        }
+        if (isset($configSettings['usLiveClientId'])) {
+            $this->usLiveClientId = '';
         }
     }
 

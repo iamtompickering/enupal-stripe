@@ -199,6 +199,62 @@ class StripeVariable extends Behavior
     }
 
     /**
+     * @return string
+     */
+    public function getPublishableKeyByCurrency($currency = null)
+    {
+        return Stripe::$app->settings->getPublishableKeyByCurrency($currency);
+    }
+
+    /**
+     * @return string
+     */
+    public function getPrivateKey()
+    {
+        return Stripe::$app->settings->getPrivateKey();
+    }
+
+    /**
+     * @return string
+     */
+    public function getPrivateKeyByCurrency($currency = null)
+    {
+        return Stripe::$app->settings->getPrivateKeyByCurrency($currency);
+    }
+
+    /**
+     * @return string
+     */
+    public function getClientId()
+    {
+        return Stripe::$app->settings->getClientId();
+    }
+
+    /**
+     * @return string
+     */
+    public function getClientIdByCurrency($currency = null)
+    {
+        return Stripe::$app->settings->getClientIdByCurrency($currency);
+    }
+
+    /**
+     * @return string
+     */
+    public function getCurrentCurrency()
+    {
+        return Stripe::$app->settings->getCurrentCurrency();
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getWebhookSigningSecretByCurrency($currency = null)
+    {
+        return Stripe::$app->settings->getWebhookSigningSecretByCurrency($currency);
+    }
+
+    /**
      * Returns a complete Payment Form for display in template
      *
      * @param string $handle

@@ -201,12 +201,18 @@ class WebhookController extends FrontEndController
         $sigHeader = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? null;
         $endpointSecret = null;
 
-        if ($settings->testMode && !empty($settings->testWebhookSigningSecret)) {
-            $endpointSecret = $settings->testWebhookSigningSecret;
-        }
+        // Try to get currency-based webhook signing secret first
+        $endpointSecret = StripePlugin::$app->settings->getWebhookSigningSecretByCurrency();
 
-        if (!$settings->testMode && !empty($settings->liveWebhookSigningSecret)) {
-            $endpointSecret = $settings->liveWebhookSigningSecret;
+        // Fallback to original method if no currency-based secret is found
+        if (empty($endpointSecret)) {
+            if ($settings->testMode && !empty($settings->testWebhookSigningSecret)) {
+                $endpointSecret = $settings->testWebhookSigningSecret;
+            }
+
+            if (!$settings->testMode && !empty($settings->liveWebhookSigningSecret)) {
+                $endpointSecret = $settings->liveWebhookSigningSecret;
+            }
         }
 
         if (empty($endpointSecret)) {
