@@ -58,9 +58,18 @@ class PaymentIntents extends Component
      */
     public function createOrderFromPaymentIntent(PaymentIntent $paymentIntent, $checkoutSession)
     {
+        // Add debugging
+        Craft::info('Creating order from payment intent - ID: ' . $paymentIntent['id'], __METHOD__);
+        Craft::info('Payment intent currency: ' . ($paymentIntent['currency'] ?? 'not set'), __METHOD__);
+        Craft::info('Checkout session currency: ' . ($checkoutSession['currency'] ?? 'not set'), __METHOD__);
+
         $metadata = $paymentIntent['metadata'];
         $formId = $metadata['stripe_payments_form_id'];
         $userId = $metadata['stripe_payments_user_id'];
+
+        Craft::info('Form ID from metadata: ' . $formId, __METHOD__);
+        Craft::info('User ID from metadata: ' . $userId, __METHOD__);
+
         $checkoutItems = StripePlugin::$app->checkout->getAllCheckoutItems($checkoutSession['id']);
 
         $quantity = $this->getCheckoutItemsQuantity($checkoutItems);
@@ -75,6 +84,13 @@ class PaymentIntents extends Component
         $customer = StripePlugin::$app->customers->getStripeCustomer($paymentIntent['customer']);
         StripePlugin::$app->customers->registerCustomer($customer, $testMode);
         $form = StripePlugin::$app->paymentForms->getPaymentFormById($formId);
+
+        if (!$form) {
+            Craft::error('Payment form not found for ID: ' . $formId, __METHOD__);
+            return null;
+        }
+
+        Craft::info('Payment form found - Handle: ' . $form->handle . ', Currency: ' . $form->currency, __METHOD__);
 
         $data = [];
         $data['enupalStripe']['metadata'] = $this->removePaymentIntentMetadata($metadata);
@@ -112,7 +128,16 @@ class PaymentIntents extends Component
             ];
         }
 
+        Craft::info('About to process payment with data: ' . json_encode($data), __METHOD__);
+
         $order = StripePlugin::$app->orders->processPayment($data);
+
+        if ($order) {
+            Craft::info('Order created successfully: ' . $order->number, __METHOD__);
+        } else {
+            Craft::error('Failed to create order from payment intent', __METHOD__);
+        }
+
         if ($couponCode){
             $coupon = StripePlugin::$app->coupons->getCoupon($couponCode);
 	        if ($coupon){

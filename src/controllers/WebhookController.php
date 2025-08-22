@@ -31,7 +31,10 @@ class WebhookController extends FrontEndController
 
         $isPro = StripePlugin::getInstance()->is(StripePlugin::EDITION_PRO);
         $eventJson = json_decode($input, true);
-        Craft::info(json_encode($eventJson), __METHOD__);
+
+        // Enhanced logging for debugging
+        Craft::info('Webhook received - Type: ' . ($eventJson['type'] ?? 'unknown'), __METHOD__);
+        Craft::info('Webhook data: ' . json_encode($eventJson), __METHOD__);
 
         if (!isset($eventJson['type'])) {
             Craft::info('This is not a request from Stripe, skipping...', __METHOD__);
@@ -39,8 +42,14 @@ class WebhookController extends FrontEndController
         }
 
         $stripeId = $eventJson['data']['object']['id'] ?? null;
+        Craft::info('Processing webhook for Stripe ID: ' . $stripeId, __METHOD__);
 
         $order = StripePlugin::$app->orders->getOrderByStripeId($stripeId);
+        if ($order) {
+            Craft::info('Found existing order: ' . $order->number, __METHOD__);
+        } else {
+            Craft::info('No existing order found for Stripe ID: ' . $stripeId, __METHOD__);
+        }
 
         switch ($eventJson['type']) {
             case 'source.chargeable':
@@ -104,20 +113,30 @@ class WebhookController extends FrontEndController
                 break;
             // New checkout
             case 'checkout.session.completed':
+                Craft::info('Processing checkout.session.completed webhook', __METHOD__);
+
                 // Capture Order
                 $checkoutSession = $eventJson['data']['object'];
                 $paymentIntentId = $checkoutSession['payment_intent'];
                 $order = null;
+
+                // Log checkout session details
+                Craft::info('Checkout session details - Payment Intent: ' . $paymentIntentId, __METHOD__);
+                Craft::info('Checkout session currency: ' . ($checkoutSession['currency'] ?? 'not set'), __METHOD__);
 
                 // Cart logic
                 $metadata = $checkoutSession['metadata'];
                 $cartNumber = $metadata[Checkout::METADATA_CART_NUMBER] ?? null;
                 $checkoutSessionUrl = $metadata[Checkout::METADATA_CHECKOUT_TWIG] ?? null;
 
+                Craft::info('Checkout metadata - Cart Number: ' . ($cartNumber ?? 'null') . ', Checkout URL: ' . ($checkoutSessionUrl ?? 'null'), __METHOD__);
+
                 if ((!is_null($cartNumber) || !is_null($checkoutSessionUrl)) && $isPro) {
+                    Craft::info('Creating cart order from checkout session', __METHOD__);
                     $order = StripePlugin::$app->paymentIntents->createCartOrder($checkoutSession);
                 } else if (is_null($cartNumber) and is_null($paymentIntentId)){
                     // We have a subscription
+                    Craft::info('Creating order from subscription', __METHOD__);
                     $subscriptionId = $checkoutSession['subscription'];
                     $order = StripePlugin::$app->orders->getOrderByStripeId($subscriptionId);
                     if ($order !== null) {
@@ -130,6 +149,7 @@ class WebhookController extends FrontEndController
                         $order = StripePlugin::$app->paymentIntents->createOrderFromSubscription($subscription, $checkoutSession);
                     }
                 }else{
+                    Craft::info('Creating order from payment intent', __METHOD__);
                     $paymentIntent = StripePlugin::$app->paymentIntents->getPaymentIntent($paymentIntentId);
 
                     if ($paymentIntent){
@@ -146,6 +166,9 @@ class WebhookController extends FrontEndController
 
                 if ($order === null){
                     Craft::error('Something went wrong creating the Order from checkout session', __METHOD__);
+                    Craft::error('Checkout session data: ' . json_encode($checkoutSession), __METHOD__);
+                } else {
+                    Craft::info('Order created successfully: ' . $order->number, __METHOD__);
                 }
                 break;
             // Products
@@ -182,11 +205,15 @@ class WebhookController extends FrontEndController
         // Let's add a message to the order
         if ($order !== null){
             StripePlugin::$app->messages->addMessage($order->id, $eventJson['type'], $eventJson);
+            Craft::info('Added webhook message to order: ' . $order->number, __METHOD__);
+        } else {
+            Craft::warning('No order to add webhook message to', __METHOD__);
         }
 
         StripePlugin::$app->orders->triggerWebhookEvent($eventJson, $order);
 
         http_response_code(200); // PHP 5.4 or greater
+        Craft::info('Webhook processed successfully', __METHOD__);
 
         return $this->getResponse();
     }

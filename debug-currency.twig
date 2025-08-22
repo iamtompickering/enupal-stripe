@@ -1,0 +1,46 @@
+{# Debug Currency Template #}
+{# Place this in your templates directory and access it to debug currency issues #}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Currency Debug</title>
+</head>
+<body>
+    <h1>Currency Debug Information</h1>
+
+    <h2>Current Session Currency</h2>
+    <p>Session Currency: <strong>{{ craft.app.session.get('currency', 'not set') }}</strong></p>
+
+    <h2>API Keys by Currency</h2>
+    <p>GBP Publishable Key: <code>{{ craft.enupalStripe.getPublishableKeyByCurrency('gbp')|slice(0, 20) }}...</code></p>
+    <p>USD Publishable Key: <code>{{ craft.enupalStripe.getPublishableKeyByCurrency('usd')|slice(0, 20) }}...</code></p>
+
+    <h2>Current Currency API Keys</h2>
+    <p>Current Publishable Key: <code>{{ craft.enupalStripe.getPublishableKeyByCurrency()|slice(0, 20) }}...</code></p>
+    <p>Current Private Key: <code>{{ craft.enupalStripe.getPrivateKeyByCurrency()|slice(0, 20) }}...</code></p>
+
+    <h2>Test Mode</h2>
+    <p>Test Mode: <strong>{{ craft.enupalStripe.getSettings().testMode ? 'Enabled' : 'Disabled' }}</strong></p>
+
+    <h2>Set Currency</h2>
+    <form method="post">
+        {{ csrfInput() }}
+        <input type="hidden" name="action" value="my-module/my/set-currency">
+        <select name="currency">
+            <option value="usd">USD</option>
+            <option value="gbp">GBP</option>
+        </select>
+        <button type="submit">Set Currency</button>
+    </form>
+
+    <h2>Current Settings</h2>
+    <p>Default Currency: <strong>{{ craft.enupalStripe.getSettings().defaultCurrency }}</strong></p>
+
+    <script>
+        // Show current currency in console
+        console.log('Current Session Currency:', '{{ craft.app.session.get('currency', 'not set') }}');
+        console.log('Current Publishable Key:', '{{ craft.enupalStripe.getPublishableKeyByCurrency()|slice(0, 20) }}...');
+    </script>
+</body>
+</html>
