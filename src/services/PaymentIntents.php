@@ -269,9 +269,18 @@ class PaymentIntents extends Component
      */
     public function createOrderFromSubscription($subscription, $checkoutSession)
     {
+        // Add debugging
+        Craft::info('Creating order from subscription - ID: ' . $subscription['id'], __METHOD__);
+        Craft::info('Subscription currency: ' . ($subscription['currency'] ?? 'not set'), __METHOD__);
+        Craft::info('Checkout session currency: ' . ($checkoutSession['currency'] ?? 'not set'), __METHOD__);
+
         $metadata = $subscription['metadata'];
         $formId = $metadata['stripe_payments_form_id'];
         $userId = $metadata['stripe_payments_user_id'];
+
+        Craft::info('Form ID from subscription metadata: ' . $formId, __METHOD__);
+        Craft::info('User ID from subscription metadata: ' . $userId, __METHOD__);
+
         $checkoutItems = StripePlugin::$app->checkout->getAllCheckoutItems($checkoutSession['id']);
 
         $quantity = $this->getCheckoutItemsQuantity($checkoutItems);
@@ -281,12 +290,21 @@ class PaymentIntents extends Component
         StripePlugin::$app->customers->registerCustomer($customer, $testMode);
         $form = StripePlugin::$app->paymentForms->getPaymentFormById($formId);
 
+        if (!$form) {
+            Craft::error('Payment form not found for subscription - Form ID: ' . $formId, __METHOD__);
+            return null;
+        }
+
+        Craft::info('Payment form found for subscription - Handle: ' . $form->handle . ', Currency: ' . $form->currency, __METHOD__);
+
         $invoice = StripePlugin::$app->customers->getStripeInvoice($subscription['latest_invoice']);
 
         $amount = $subscription['plan']['amount'] * $quantity;
         if ($invoice){
             $amount = $invoice['amount_paid'] == 0 ? $amount: $invoice['amount_paid'];
         }
+
+        Craft::info('Subscription amount: ' . $amount, __METHOD__);
 
         $data = [];
         $data['enupalStripe']['metadata'] = $this->removePaymentIntentMetadata($metadata);
@@ -322,7 +340,15 @@ class PaymentIntents extends Component
             }
         }
 
+        Craft::info('About to process subscription payment with data: ' . json_encode($data), __METHOD__);
+
         $order = StripePlugin::$app->orders->processPayment($data);
+
+        if ($order) {
+            Craft::info('Subscription order created successfully: ' . $order->number, __METHOD__);
+        } else {
+            Craft::error('Failed to create subscription order', __METHOD__);
+        }
 
         return $order;
     }
