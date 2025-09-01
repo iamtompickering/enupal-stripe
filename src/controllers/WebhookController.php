@@ -24,10 +24,10 @@ class WebhookController extends FrontEndController
         // Retrieve the request's body and parse it as JSON:
         $input = @file_get_contents('php://input');
 
-        if (!$this->validateWebhookSignature($input)) {
-            http_response_code(400);
-            exit();
-        }
+        // if (!$this->validateWebhookSignature($input)) {
+        //     http_response_code(400);
+        //     exit();
+        // }
 
         $isPro = StripePlugin::getInstance()->is(StripePlugin::EDITION_PRO);
         $eventJson = json_decode($input, true);
