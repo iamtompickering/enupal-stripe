@@ -33,6 +33,9 @@ class WebhookController extends FrontEndController
         $eventJson = json_decode($input, true);
         Craft::info(json_encode($eventJson), __METHOD__);
 
+        $currency = strtoupper($eventJson['data']['object']['currency']);
+        Craft::$app->session->set('currency', $currency);
+
         if (!isset($eventJson['type'])) {
             Craft::info('This is not a request from Stripe, skipping...', __METHOD__);
             return $this->getResponse(false);
